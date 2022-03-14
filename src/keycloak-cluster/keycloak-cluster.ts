@@ -1,8 +1,9 @@
-import * as ec2 from '@aws-cdk/aws-ec2';
-import * as ecs from '@aws-cdk/aws-ecs';
-import * as elbv2 from '@aws-cdk/aws-elasticloadbalancingv2';
-import * as servicediscovery from '@aws-cdk/aws-servicediscovery';
-import * as cdk from '@aws-cdk/core';
+import { Construct } from 'constructs';
+import { Duration} from 'aws-cdk-lib';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as ecs from 'aws-cdk-lib/aws-ecs';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
 import { KeycloakContainerExtensionProps } from '../keycloak-container-extension';
 import { KeycloakFargateTaskDefinition } from '../keycloak-task-definition';
 import { CloudMapNamespaceProvider, ICloudMapNamespaceInfoProvider } from './cloudmap-namespace-provider';
@@ -117,7 +118,7 @@ export interface KeycloakClusterProps {
    * Initial grace period for Keycloak to spin up.
    * @default 10 minutes
    */
-  readonly healthCheckGracePeriod?: cdk.Duration;
+  readonly healthCheckGracePeriod?: Duration;
 
   /**
    * Fargate task cpu spec
@@ -151,7 +152,7 @@ export interface KeycloakClusterProps {
 /**
  * A complete Keycloak cluster in a box.
  */
-export class KeycloakCluster extends cdk.Construct {
+export class KeycloakCluster extends Construct {
   /**
    * The ECS service controlling the cluster tasks.
    */
@@ -164,7 +165,7 @@ export class KeycloakCluster extends cdk.Construct {
   /** @internal */
   public readonly _adminConsolePortPublisher: IPortPublisher;
 
-  constructor(scope: cdk.Construct, id: string, props?: KeycloakClusterProps) {
+  constructor(scope: Construct, id: string, props?: KeycloakClusterProps) {
     super(scope, id);
 
     // Defaults
@@ -235,9 +236,9 @@ export class KeycloakCluster extends cdk.Construct {
 
     const defaultHealthCheckGracePeriod = keycloakTaskDefinition.keycloakContainerExtension.infinicacheClustering
       // When infinicache clustering is enabled, we need a longer default health check grace period.
-      ? cdk.Duration.minutes(10)
+      ? Duration.minutes(10)
       // Without infinicache clustering, keycloak comes online quicker.
-      : cdk.Duration.minutes(2);
+      : Duration.minutes(2);
 
     const healthCheckGracePeriod = props?.healthCheckGracePeriod ?? defaultHealthCheckGracePeriod;
 
@@ -255,7 +256,7 @@ export class KeycloakCluster extends cdk.Construct {
       cloudMapOptions: {
         cloudMapNamespace: cloudMapNamespaceInfo.cloudMapNamespace,
         dnsRecordType: servicediscovery.DnsRecordType.A,
-        dnsTtl: cdk.Duration.seconds(10),
+        dnsTtl: Duration.seconds(10),
       },
     });
 
@@ -281,8 +282,8 @@ export class KeycloakCluster extends cdk.Construct {
       vpc: vpcInfo.vpc,
       service: this.service,
       containerName: keycloakTaskDefinition.keycloakContainerExtension.containerName,
-      slowStart: cdk.Duration.seconds(60),
-      deregistrationDelay: cdk.Duration.seconds(5),
+      slowStart: Duration.seconds(60),
+      deregistrationDelay: Duration.seconds(5),
       healthCheck: {
         path: '/auth/realms/master',
         enabled: true,

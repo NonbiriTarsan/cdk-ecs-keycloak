@@ -1,8 +1,10 @@
-import * as acm from '@aws-cdk/aws-certificatemanager';
-import * as ec2 from '@aws-cdk/aws-ec2';
-import * as ecs from '@aws-cdk/aws-ecs';
-import * as elbv2 from '@aws-cdk/aws-elasticloadbalancingv2';
-import * as cdk from '@aws-cdk/core';
+import { Fn, CfnOutput, Duration} from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as ecs from 'aws-cdk-lib/aws-ecs';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+
 
 /**
  * @internal
@@ -13,8 +15,8 @@ export interface PublishContainerPortProps {
   readonly containerName: string;
   readonly containerPort: number;
   readonly containerPortProtocol: elbv2.Protocol;
-  readonly slowStart?: cdk.Duration;
-  readonly deregistrationDelay?: cdk.Duration;
+  readonly slowStart?: Duration;
+  readonly deregistrationDelay?: Duration;
   readonly healthCheck?: elbv2.HealthCheck;
 }
 
@@ -27,7 +29,7 @@ export interface IPortPublisher {
    * VPC is available.
    * @internal
    */
-  _publishContainerPort(scope: cdk.Construct, props: PublishContainerPortProps): void;
+  _publishContainerPort(scope: Construct, props: PublishContainerPortProps): void;
 }
 
 /**
@@ -89,7 +91,7 @@ export class AddTargetPortPublisher implements IPortPublisher {
   /**
    * @internal
    */
-  _publishContainerPort(_scope: cdk.Construct, props: PublishContainerPortProps): void {
+  _publishContainerPort(_scope: Construct, props: PublishContainerPortProps): void {
     const listenerInfo = this.listenerInfo;
 
     const targets = [props.service.loadBalancerTarget({
@@ -149,7 +151,7 @@ export class HttpAlbPortPublisher implements IPortPublisher {
   /**
    * @internal
    */
-  public _publishContainerPort(scope: cdk.Construct, props: PublishContainerPortProps) {
+  public _publishContainerPort(scope: Construct, props: PublishContainerPortProps) {
     // Create or re-use an application load balancer in the scope.
     const loadBalancer = new elbv2.ApplicationLoadBalancer(scope, this.id, {
       vpc: props.vpc,
@@ -160,8 +162,8 @@ export class HttpAlbPortPublisher implements IPortPublisher {
       protocol: elbv2.ApplicationProtocol.HTTP,
     });
 
-    new cdk.CfnOutput(listener, 'Url', {
-      value: cdk.Fn.sub('http://${HostName}/', {
+    new CfnOutput(listener, 'Url', {
+      value: Fn.sub('http://${HostName}/', {
         HostName: loadBalancer.loadBalancerDnsName,
       }),
     });
@@ -182,7 +184,7 @@ export class HttpAlbPortPublisher implements IPortPublisher {
       // Keycloak recommends session stickiness to reduce remote distributed cache
       // access across cluster nodes.
       // https://www.keycloak.org/docs/latest/server_installation/#sticky-sessions
-      stickinessCookieDuration: cdk.Duration.days(1),
+      stickinessCookieDuration: Duration.days(1),
     });
   }
 }
@@ -225,7 +227,7 @@ export class HttpsAlbPortPublisher implements IPortPublisher {
   /**
    * @internal
    */
-  _publishContainerPort(scope: cdk.Construct, props: PublishContainerPortProps) {
+  _publishContainerPort(scope: Construct, props: PublishContainerPortProps) {
     // Create or re-use an application load balancer in the scope.
     const loadBalancer: elbv2.ApplicationLoadBalancer = scope.node.tryFindChild(this.id) as any ??
       new elbv2.ApplicationLoadBalancer(scope, this.id, {
@@ -254,8 +256,8 @@ export class HttpsAlbPortPublisher implements IPortPublisher {
       protocol: elbv2.ApplicationProtocol.HTTPS,
     });
 
-    new cdk.CfnOutput(listener, 'Url', {
-      value: cdk.Fn.sub('https://${HostName}/', {
+    new CfnOutput(listener, 'Url', {
+      value: Fn.sub('https://${HostName}/', {
         HostName: loadBalancer.loadBalancerDnsName,
       }),
     });
@@ -276,7 +278,7 @@ export class HttpsAlbPortPublisher implements IPortPublisher {
       // Keycloak recommends session stickiness to reduce remote distributed cache
       // access across cluster nodes.
       // https://www.keycloak.org/docs/latest/server_installation/#sticky-sessions
-      stickinessCookieDuration: cdk.Duration.days(1),
+      stickinessCookieDuration: Duration.days(1),
     });
   }
 }
@@ -320,7 +322,7 @@ export class NlbPortPublisher implements IPortPublisher {
   /**
    * @internal
    */
-  _publishContainerPort(scope: cdk.Construct, props: PublishContainerPortProps) {
+  _publishContainerPort(scope: Construct, props: PublishContainerPortProps) {
     // Create or re-use a network load balancer in the scope.
     const loadBalancer: elbv2.NetworkLoadBalancer = scope.node.tryFindChild(this.id) as any ??
       new elbv2.NetworkLoadBalancer(scope, this.id, {
@@ -332,8 +334,8 @@ export class NlbPortPublisher implements IPortPublisher {
       port: this.port,
     });
 
-    new cdk.CfnOutput(listener, 'Endpoint', {
-      value: cdk.Fn.sub('${Host}:${Port}', {
+    new CfnOutput(listener, 'Endpoint', {
+      value: Fn.sub('${Host}:${Port}', {
         Host: loadBalancer.loadBalancerDnsName,
         Port: this.port.toString(),
       }),
@@ -392,7 +394,7 @@ export class NonePortPublisher implements IPortPublisher {
   /**
    * @internal
    */
-  _publishContainerPort(_scope: cdk.Construct, _props: PublishContainerPortProps) {
+  _publishContainerPort(_scope: Construct, _props: PublishContainerPortProps) {
     // Do nothing.
   }
 }

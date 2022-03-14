@@ -1,9 +1,10 @@
-import * as ecs from '@aws-cdk/aws-ecs';
-import * as elbv2 from '@aws-cdk/aws-elasticloadbalancingv2';
-import * as logs from '@aws-cdk/aws-logs';
-import * as secretsmanager from '@aws-cdk/aws-secretsmanager';
-import * as cloudmap from '@aws-cdk/aws-servicediscovery';
-import * as cdk from '@aws-cdk/core';
+import { Fn, Lazy} from 'aws-cdk-lib';
+import * as ecs from 'aws-cdk-lib/aws-ecs';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import * as logs from 'aws-cdk-lib/aws-logs';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as cloudmap from 'aws-cdk-lib/aws-servicediscovery';
+
 
 /**
  * The database vendor.
@@ -267,10 +268,10 @@ export class KeycloakContainerExtension implements ecs.ITaskDefinitionExtension 
         DB_VENDOR: this.databaseVendor,
         DB_NAME: databaseNameForVendor,
         DB_SCHEMA: this._databaseSchema ?? '',
-        JGROUPS_DISCOVERY_PROTOCOL: cdk.Lazy.string({
+        JGROUPS_DISCOVERY_PROTOCOL: Lazy.string({
           produce: () => this._getJGroupsDiscoveryProtocol(),
         }),
-        JGROUPS_DISCOVERY_PROPERTIES: cdk.Lazy.string({
+        JGROUPS_DISCOVERY_PROPERTIES: Lazy.string({
           produce: () => this._getJGroupsDiscoveryProperties(),
         }),
         CACHE_OWNERS_COUNT: this.cacheOwnersCount.toString(),
@@ -322,7 +323,7 @@ export class KeycloakContainerExtension implements ecs.ITaskDefinitionExtension 
     // To the reader: Got any suggestions? Open a PR. I'd love to run this on
     // EC2 with bridged networking so that keycloak can be run in containers on
     // bursting instance types where vpc trunking is not available.
-    return cdk.Fn.sub('dns_query=${ServiceName}.${ServiceNamespace},dns_record_type=${QueryType}', {
+    return Fn.sub('dns_query=${ServiceName}.${ServiceNamespace},dns_record_type=${QueryType}', {
       ServiceName: this._cloudMapService.serviceName,
       ServiceNamespace: this._cloudMapService.namespace.namespaceName,
       QueryType: mapDnsRecordTypeToJGroup(this._cloudMapService.dnsRecordType),

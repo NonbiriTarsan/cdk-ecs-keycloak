@@ -1,5 +1,6 @@
-import * as acm from '@aws-cdk/aws-certificatemanager';
-import * as elbv2 from '@aws-cdk/aws-elasticloadbalancingv2';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+
 import {
   AddTargetPortPublisher,
   HttpAlbPortPublisher,
